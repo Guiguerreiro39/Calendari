@@ -29,9 +29,7 @@ const CustomHeaderV2 = ({ addEvent }) => {
 const CustomHeader = ({ addEvent }) => {
   return (
     <div className="flex items-center w-full gap-4">
-      <div className="w-full">
-        <Header />
-      </div>
+      <Header />
       <button
         className="bg-red-500 px-4 py-1 rounded-md text-white whitespace-nowrap"
         onClick={addEvent}
@@ -72,8 +70,16 @@ export default function Page() {
     <div className="m-8">
       <Calendar
         events={events}
-        borderColor="red"
         customHeader={<CustomHeader addEvent={addEvent} />}
+        eventLimit={1}
+        dayGridClickable
+        borderColor="red"
+        todayClassName="bg-red-600"
+        todayGridClassName="bg-red-200"
+        dayGridClassName="bg-red-50 hover:bg-red-100"
+        className="shadow-none"
+        timeGridClassName="bg-red-200 text-red-600"
+        eventClassName="hover:text-red-600"
       />
     </div>
   );

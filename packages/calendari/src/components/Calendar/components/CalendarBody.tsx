@@ -1,11 +1,12 @@
 import { useAtom } from 'jotai'
 import React, { useCallback, useEffect, useState } from 'react'
 import { CalendarAtoms } from '../store'
-import { endOfMonth, format, formatISO, getDate, isSameDay, isToday, startOfMonth } from 'date-fns'
+import { endOfMonth, format, formatISO, getDate, isToday, startOfMonth } from 'date-fns'
 import { getDaysGrid, sortEvents } from '../utils'
-import { DaysGrid, EventList, SingleDayGrid, colors } from '../types'
+import { DaysGrid, EventList, SingleDayGrid, CalendarBodyProps } from '../types'
 import { twJoin, twMerge } from 'tailwind-merge'
 import { cva } from 'class-variance-authority'
+import Element from '../utils/Element'
 
 const bodyClassName = cva('flex text-xs leading-6 text-neutral-700 lg:flex-auto', {
   variants: {
@@ -39,11 +40,15 @@ const bodyClassName = cva('flex text-xs leading-6 text-neutral-700 lg:flex-auto'
   },
 })
 
-const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid }> = ({ daysGrid }) => {
+const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid } & CalendarBodyProps> = ({
+  daysGrid,
+  dayGridClassName = '',
+  className = '',
+}) => {
   const [, setCurrentDayGrid] = useAtom(CalendarAtoms.currentDayGrid)
 
   return (
-    <div className='isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden'>
+    <div className={twMerge('isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden', className)}>
       {daysGrid.map((day) => {
         const notCurrentMonthClassName = !day.isCurrentMonth ? 'bg-neutral-50 text-neutral-500' : ''
         const formattedDate = format(day.date, 'yyyy-MM-dd')
@@ -56,6 +61,7 @@ const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid }> = ({ daysGrid }) => {
             className={twMerge(
               'flex h-14 flex-col bg-white px-3 py-2 text-gray-700 hover:bg-gray-100 focus:z-10 ',
               notCurrentMonthClassName,
+              dayGridClassName,
             )}
           >
             <time
@@ -70,7 +76,7 @@ const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid }> = ({ daysGrid }) => {
             <span className='sr-only'>{day.events.length} events</span>
             <span className='-mx-0.5 mt-auto flex flex-wrap-reverse'>
               {day.events.map((_, index) => (
-                <span key={index} className='mx-0.5 mb-1 h-1.5 w-1.5 rounded-full bg-neutral-400'></span>
+                <span key={index} className='mx-0.5 mb-1 h-1.5 w-1.5 rounded-full bg-indigo-300'></span>
               ))}
             </span>
           </button>
@@ -80,7 +86,16 @@ const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid }> = ({ daysGrid }) => {
   )
 }
 
-const CalendarBody: React.FC<{ borderColor?: colors }> = ({ borderColor = 'neutral' }) => {
+const CalendarBody: React.FC<CalendarBodyProps> = ({
+  borderColor = 'neutral',
+  eventLimit = 2,
+  dayGridClassName,
+  eventClassName,
+  className,
+  dayGridClickable = false,
+  todayClassName,
+  todayGridClassName,
+}) => {
   const [month] = useAtom(CalendarAtoms.month)
   const [year] = useAtom(CalendarAtoms.year)
   const [events] = useAtom(CalendarAtoms.events)
@@ -115,53 +130,63 @@ const CalendarBody: React.FC<{ borderColor?: colors }> = ({ borderColor = 'neutr
 
   return (
     <div className={bodyClassName({ borderColor })}>
-      <div className='hidden w-full lg:grid lg:grid-cols-7 lg:grid-rows-6 lg:gap-px'>
+      <div className={twMerge('hidden w-full lg:grid lg:grid-cols-7 lg:grid-rows-6 lg:gap-px', className)}>
         {daysGrid.map((day) => {
           const notCurrentMonthClassName = !day.isCurrentMonth && 'bg-neutral-50 text-neutral-500'
-          const isTodayClassName = isToday(day.date) && 'bg-indigo-50'
+          const isTodayClassName =
+            isToday(day.date) && twMerge('font-semibold text-white bg-neutral-600', todayClassName)
+          const isTodayGridClassName = isToday(day.date) && todayGridClassName
           const formattedDate = formatISO(day.date, { representation: 'date' })
 
           return (
-            <button
+            <Element
+              as={dayGridClickable ? 'button' : 'div'}
               onClick={() => setCurrentDayGrid(day)}
               key={formattedDate}
               className={twMerge(
-                'relative text-start flex flex-col justify-start bg-white px-3 py-2 text-neutral-700 h-24',
+                'relative text-start flex flex-col justify-start bg-white px-3 py-2 text-neutral-700 min-h-[6rem]',
                 notCurrentMonthClassName,
-                isTodayClassName,
+                dayGridClassName,
+                isTodayGridClassName,
               )}
             >
               <time
                 dateTime={formattedDate}
-                className={twJoin(
-                  'flex h-6 w-6 items-center justify-center rounded-full',
-                  currentDayGrid &&
-                    isSameDay(currentDayGrid.date, day.date) &&
-                    'bg-indigo-600 font-semibold text-white',
-                )}
+                className={twJoin('flex h-6 w-6 items-center justify-center rounded-full', isTodayClassName)}
               >
                 {getDate(day.date)}
               </time>
               <ol className='mt-2 w-full'>
-                {day.events.map((event, index) => (
-                  <li key={index} className='flex'>
-                    <p className='flex-auto truncate font-medium text-neutral-900 group-hover:text-indigo-600'>
-                      {event.title}
-                    </p>
+                {day.events.slice(0, eventLimit).map((event, index) => (
+                  <li
+                    key={index}
+                    className={twMerge('flex font-medium hover:text-indigo-600 text-neutral-900', eventClassName)}
+                  >
+                    <p className='flex-auto truncate'>{event.title}</p>
                     <time
                       dateTime={formatISO(event.date)}
-                      className='ml-3 hidden flex-none text-neutral-500 group-hover:text-indigo-600 xl:block uppercase'
+                      className='ml-3 hidden flex-none opacity-70 xl:block uppercase'
                     >
                       {format(event.date, 'haa')}
                     </time>
                   </li>
                 ))}
+                {day.events.length > eventLimit && (
+                  <li className={twMerge('flex hover:text-indigo-600 text-neutral-900', eventClassName)}>
+                    <p className='truncate opacity-50'>+ {day.events.length - eventLimit} more</p>
+                  </li>
+                )}
               </ol>
-            </button>
+            </Element>
           )
         })}
       </div>
-      <MobileCalendarBody daysGrid={daysGrid} />
+      <MobileCalendarBody
+        borderColor={borderColor}
+        daysGrid={daysGrid}
+        dayGridClassName={dayGridClassName}
+        className={className}
+      />
     </div>
   )
 }
