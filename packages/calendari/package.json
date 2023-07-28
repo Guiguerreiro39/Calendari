@@ -21,7 +21,7 @@
   ],
   "scripts": {
     "watch": "watch 'npm run build' ./src",
-    "build": "npm run build:esm && npm run build:cjs && npm run build:tailwind",
+    "build": "npm run build:tailwind && npm run build:esm && npm run build:cjs",
     "build:esm": "tsc",
     "build:cjs": "tsc --module commonjs --outDir dist/cjs",
     "build:tailwind": "npx tailwindcss -o ./dist/styles.css --minify",
@@ -39,6 +39,7 @@
     "@testing-library/react": "^14.0.0",
     "@types/jest": "^29.5.3",
     "@types/react": "^18.2.14",
+    "@types/uuid": "^9.0.2",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "autoprefixer": "^10.4.14",
@@ -64,6 +65,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
-    "date-fns": "^2.30.0"
+    "date-fns": "^2.30.0",
+    "uuid": "^9.0.0"
   }
 }

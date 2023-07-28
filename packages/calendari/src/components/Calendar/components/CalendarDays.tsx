@@ -41,36 +41,36 @@ const timeClassName = cva(
 
 const CalendarDays: React.FC<CalendarDaysProps> = ({
   borderColor = 'neutral',
-  timeGridClassName = '',
+  timeContainerClassName = '',
   className = '',
 }) => {
   return (
     <div className={twMerge(daysClassName({ borderColor }), className)}>
-      <div className={twMerge(timeClassName({}), timeGridClassName)}>
+      <div className={twMerge(timeClassName({}), timeContainerClassName)}>
         <span>M</span>
         <span className='sr-only sm:not-sr-only'>on</span>
       </div>
-      <div className={twMerge(timeClassName(), timeGridClassName)}>
+      <div className={twMerge(timeClassName(), timeContainerClassName)}>
         <span>T</span>
         <span className='sr-only sm:not-sr-only'>ue</span>
       </div>
-      <div className={twMerge(timeClassName(), timeGridClassName)}>
+      <div className={twMerge(timeClassName(), timeContainerClassName)}>
         <span>W</span>
         <span className='sr-only sm:not-sr-only'>ed</span>
       </div>
-      <div className={twMerge(timeClassName(), timeGridClassName)}>
+      <div className={twMerge(timeClassName(), timeContainerClassName)}>
         <span>T</span>
         <span className='sr-only sm:not-sr-only'>hu</span>
       </div>
-      <div className={twMerge(timeClassName(), timeGridClassName)}>
+      <div className={twMerge(timeClassName(), timeContainerClassName)}>
         <span>F</span>
         <span className='sr-only sm:not-sr-only'>ri</span>
       </div>
-      <div className={twMerge(timeClassName(), timeGridClassName)}>
+      <div className={twMerge(timeClassName(), timeContainerClassName)}>
         <span>S</span>
         <span className='sr-only sm:not-sr-only'>at</span>
       </div>
-      <div className={twMerge(timeClassName(), timeGridClassName)}>
+      <div className={twMerge(timeClassName(), timeContainerClassName)}>
         <span>S</span>
         <span className='sr-only sm:not-sr-only'>un</span>
       </div>

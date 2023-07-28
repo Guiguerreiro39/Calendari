@@ -44,15 +44,23 @@ export default function Page() {
   const [events, setEvents] = useState([
     {
       title: "Date night",
-      date: new Date(),
+      startAt: new Date(2023, 6, 28),
+      endAt: new Date(2023, 7, 1),
     },
     {
       title: "Design review",
-      date: new Date(2023, 6, 12),
+      startAt: new Date(),
+      endAt: new Date(),
     },
     {
       title: "Hockey game",
-      date: new Date(),
+      startAt: new Date(),
+      endAt: new Date(),
+    },
+    {
+      title: "Hockey game",
+      startAt: new Date(),
+      endAt: new Date(),
     },
   ]);
 
@@ -61,25 +69,29 @@ export default function Page() {
       ...events,
       {
         title: "Date night",
-        date: new Date(2023, 6, 11),
+        startAt: new Date(2023, 6, 28),
+        endAt: new Date(2023, 7, 1),
       },
     ]);
   };
 
   return (
-    <div className="m-8">
+    <div>
       <Calendar
         events={events}
-        customHeader={<CustomHeader addEvent={addEvent} />}
-        eventLimit={1}
-        dayGridClickable
+        // customHeader={<CustomHeader addEvent={addEvent} />}
+        header={false}
+        eventLimit={3}
+        dayContainerClickable
         borderColor="red"
         todayClassName="bg-red-600"
-        todayGridClassName="bg-red-200"
-        dayGridClassName="bg-red-50 hover:bg-red-100"
-        className="shadow-none"
-        timeGridClassName="bg-red-200 text-red-600"
-        eventClassName="hover:text-red-600"
+        todayContainerClassName="bg-red-200"
+        dayContainerClassName="bg-red-50 hover:bg-red-100"
+        className="shadow-none min-h-screen rounded-none border-0"
+        timeContainerClassName="bg-red-50 text-red-600 py-0"
+        timeGridClassName="border-0"
+        eventClassName="bg-red-500 hover:bg-red-400 text-white text-xs"
+        eventLimitClassName="text-xs font-normal text-red-800"
       />
     </div>
   );

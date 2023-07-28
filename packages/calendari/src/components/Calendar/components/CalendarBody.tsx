@@ -1,14 +1,15 @@
 import { useAtom } from 'jotai'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { ElementRef, useCallback, useEffect, useRef, useState } from 'react'
 import { CalendarAtoms } from '../store'
-import { endOfMonth, format, formatISO, getDate, isToday, startOfMonth } from 'date-fns'
-import { getDaysGrid, sortEvents } from '../utils'
+import { endOfMonth, format, getDate, getDay, isToday, startOfMonth } from 'date-fns'
+import { getEventEndCol, getEventList, getEventStartingCol, getWeekDaysGrid } from '../utils'
 import { DaysGrid, EventList, SingleDayGrid, CalendarBodyProps } from '../types'
 import { twJoin, twMerge } from 'tailwind-merge'
 import { cva } from 'class-variance-authority'
-import Element from '../utils/Element'
+import DayContainer from './DayContainer'
+import Event from './Event'
 
-const bodyClassName = cva('flex text-xs leading-6 text-neutral-700 lg:flex-auto', {
+const bodyClassName = cva('flex text-xs text-neutral-700 lg:flex-auto', {
   variants: {
     borderColor: {
       transparent: 'bg-transparent',
@@ -42,10 +43,10 @@ const bodyClassName = cva('flex text-xs leading-6 text-neutral-700 lg:flex-auto'
 
 const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid } & CalendarBodyProps> = ({
   daysGrid,
-  dayGridClassName = '',
+  dayContainerClassName = '',
   className = '',
 }) => {
-  const [, setCurrentDayGrid] = useAtom(CalendarAtoms.currentDayGrid)
+  const [, setCurrentDayContainer] = useAtom(CalendarAtoms.currentDayContainer)
 
   return (
     <div className={twMerge('isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden', className)}>
@@ -56,12 +57,12 @@ const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid } & CalendarBodyProps> =
         return (
           <button
             type='button'
-            onClick={() => setCurrentDayGrid(day)}
+            onClick={() => setCurrentDayContainer(day)}
             key={formattedDate}
             className={twMerge(
               'flex h-14 flex-col bg-white px-3 py-2 text-gray-700 hover:bg-gray-100 focus:z-10 ',
               notCurrentMonthClassName,
-              dayGridClassName,
+              dayContainerClassName,
             )}
           >
             <time
@@ -87,104 +88,121 @@ const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid } & CalendarBodyProps> =
 }
 
 const CalendarBody: React.FC<CalendarBodyProps> = ({
-  borderColor = 'neutral',
+  eventContainerClassName,
+  eventLimitClassName,
   eventLimit = 2,
-  dayGridClassName,
+
+  borderColor = 'neutral',
+  dayContainerClassName,
   eventClassName,
   className,
-  dayGridClickable = false,
+  dayContainerClickable = false,
   todayClassName,
-  todayGridClassName,
+  todayContainerClassName,
 }) => {
   const [month] = useAtom(CalendarAtoms.month)
   const [year] = useAtom(CalendarAtoms.year)
   const [events] = useAtom(CalendarAtoms.events)
-  const [currentDayGrid, setCurrentDayGrid] = useAtom(CalendarAtoms.currentDayGrid)
+  const [currentDayContainer, setCurrentDayContainer] = useAtom(CalendarAtoms.currentDayContainer)
 
-  const [daysGrid, setDaysGrid] = useState<DaysGrid>([])
+  const [weekDaysGrid, setWeekDaysGrid] = useState<DaysGrid[]>([])
+  const [weekEvents, setWeekEvents] = useState<EventList[]>([])
   const [firstDayOfMonth, setFirstDayOfMonth] = useState<Date>(startOfMonth(new Date(year, month)))
   const [lastDayOfMonth, setLastDayOfMonth] = useState<Date>(endOfMonth(new Date(year, month)))
-  const [sortedEvents, setSortedEvents] = useState<EventList>(sortEvents(events))
+  const [eventsContainerHeight, setEventsContainerHeight] = useState<number>(0)
 
-  const handleCurrentDayGrid = useCallback(
+  const containerRef = useRef<ElementRef<'div'>>(null)
+
+  const handleCurrentDayContainer = useCallback(
     (day: SingleDayGrid) => {
-      if (!currentDayGrid) {
-        setCurrentDayGrid(day)
+      if (!currentDayContainer) {
+        setCurrentDayContainer(day)
       }
     },
-    [currentDayGrid, setCurrentDayGrid],
+    [currentDayContainer, setCurrentDayContainer],
   )
 
   useEffect(() => {
-    setSortedEvents(sortEvents(events))
-  }, [events])
+    if (containerRef.current) {
+      if (containerRef.current?.getElementsByClassName('event').length > 0) {
+        console.log(containerRef.current?.getElementsByClassName('event')[0])
+        setEventsContainerHeight(
+          containerRef.current?.getElementsByClassName('event')[0]?.getBoundingClientRect().height * (eventLimit + 1),
+        )
+      }
+    }
+  }, [containerRef, weekEvents, setEventsContainerHeight, eventLimit])
 
   useEffect(() => {
     setFirstDayOfMonth(startOfMonth(new Date(year, month)))
     setLastDayOfMonth(endOfMonth(new Date(year, month)))
+    setWeekEvents([])
   }, [month, year])
 
   useEffect(() => {
-    setDaysGrid(getDaysGrid(firstDayOfMonth, lastDayOfMonth, sortedEvents, handleCurrentDayGrid))
-  }, [firstDayOfMonth, lastDayOfMonth, sortedEvents, handleCurrentDayGrid])
+    setWeekDaysGrid(getWeekDaysGrid(firstDayOfMonth, lastDayOfMonth, events, handleCurrentDayContainer))
+  }, [firstDayOfMonth, lastDayOfMonth, events, handleCurrentDayContainer])
+
+  useEffect(() => {
+    if (weekDaysGrid.length > 0) {
+      setWeekEvents(getEventList(weekDaysGrid))
+    }
+  }, [weekDaysGrid])
+
+  const dayContainerMinHeight = useCallback(() => `calc(2.3rem + ${eventsContainerHeight}px)`, [eventsContainerHeight])
 
   return (
     <div className={bodyClassName({ borderColor })}>
-      <div className={twMerge('hidden w-full lg:grid lg:grid-cols-7 lg:grid-rows-6 lg:gap-px', className)}>
-        {daysGrid.map((day) => {
-          const notCurrentMonthClassName = !day.isCurrentMonth && 'bg-neutral-50 text-neutral-500'
-          const isTodayClassName =
-            isToday(day.date) && twMerge('font-semibold text-white bg-neutral-600', todayClassName)
-          const isTodayGridClassName = isToday(day.date) && todayGridClassName
-          const formattedDate = formatISO(day.date, { representation: 'date' })
-
-          return (
-            <Element
-              as={dayGridClickable ? 'button' : 'div'}
-              onClick={() => setCurrentDayGrid(day)}
-              key={formattedDate}
-              className={twMerge(
-                'relative text-start flex flex-col justify-start bg-white px-3 py-2 text-neutral-700 min-h-[6rem]',
-                notCurrentMonthClassName,
-                dayGridClassName,
-                isTodayGridClassName,
-              )}
-            >
-              <time
-                dateTime={formattedDate}
-                className={twJoin('flex h-6 w-6 items-center justify-center rounded-full', isTodayClassName)}
-              >
-                {getDate(day.date)}
-              </time>
-              <ol className='mt-2 w-full'>
-                {day.events.slice(0, eventLimit).map((event, index) => (
+      <div ref={containerRef} className={twMerge('hidden w-full lg:grid lg:grid-rows-6 lg:gap-px', className)}>
+        {weekDaysGrid.map((week, weekIndex) => (
+          <div key={weekIndex} className='relative hidden lg:grid lg:grid-cols-7 lg:gap-px'>
+            {week.map((day, dayIndex) => (
+              <DayContainer
+                key={day.date.toString()}
+                day={day}
+                dayIndex={dayIndex}
+                todayContainerClassName={todayContainerClassName}
+                dayContainerMinHeight={dayContainerMinHeight()}
+                todayClassName={todayClassName}
+                dayContainerClassName={dayContainerClassName}
+                dayContainerClickable={dayContainerClickable}
+              />
+            ))}
+            <ol className='absolute pointer-events-none w-full lg:grid lg:grid-cols-7 mt-9'>
+              {weekEvents[weekIndex] &&
+                weekEvents[weekIndex].slice(0, eventLimit).map((event) => {
+                  return (
+                    <Event
+                      key={event.id}
+                      eventClassName={eventClassName}
+                      eventContainerClassName={eventContainerClassName}
+                      event={event}
+                      startColumn={getEventStartingCol(event.startAt, week[0].date)}
+                      endColumn={getEventEndCol(event.endAt, week[6].date)}
+                    />
+                  )
+                })}
+              {week
+                .filter((day) => day.events.length > eventLimit)
+                .map((day) => (
                   <li
-                    key={index}
-                    className={twMerge('flex font-medium hover:text-indigo-600 text-neutral-900', eventClassName)}
+                    key={day.date.toString()}
+                    className={twMerge('px-2 py-0.5', eventContainerClassName)}
+                    style={{ gridColumnStart: getDay(day.date) }}
                   >
-                    <p className='flex-auto truncate'>{event.title}</p>
-                    <time
-                      dateTime={formatISO(event.date)}
-                      className='ml-3 hidden flex-none opacity-70 xl:block uppercase'
-                    >
-                      {format(event.date, 'haa')}
-                    </time>
+                    <button className={twMerge('font-semibold', eventLimitClassName)}>
+                      +{day.events.length - eventLimit} more
+                    </button>
                   </li>
                 ))}
-                {day.events.length > eventLimit && (
-                  <li className={twMerge('flex hover:text-indigo-600 text-neutral-900', eventClassName)}>
-                    <p className='truncate opacity-50'>+ {day.events.length - eventLimit} more</p>
-                  </li>
-                )}
-              </ol>
-            </Element>
-          )
-        })}
+            </ol>
+          </div>
+        ))}
       </div>
       <MobileCalendarBody
         borderColor={borderColor}
-        daysGrid={daysGrid}
-        dayGridClassName={dayGridClassName}
+        daysGrid={[]}
+        dayContainerClassName={dayContainerClassName}
         className={className}
       />
     </div>

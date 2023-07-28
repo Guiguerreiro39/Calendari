@@ -8,6 +8,7 @@ import { useAtom } from 'jotai'
 import { CalendarAtoms } from './store'
 import { cva } from 'class-variance-authority'
 import { twMerge } from 'tailwind-merge'
+import { v4 as uuid } from 'uuid'
 
 export * from './components/Header'
 export * from './api'
@@ -45,40 +46,58 @@ const containerClassName = cva('lg:flex lg:flex-auto lg:flex-col border shadow-m
 })
 
 export const Calendar: React.FC<CalendarProps> = ({
-  className,
+  // Events
   events = [],
   eventLimit = 2,
-  customHeader,
-  borderColor = 'neutral',
-  todayClassName,
-  todayGridClassName,
-  dayGridClickable = false,
-  dayGridClassName,
-  timeLineClassName,
-  timeGridClassName,
   eventClassName,
+  eventContainerClassName,
+  eventLimitClassName,
+
+  // Timeline
+  timeGridClassName,
+  timeContainerClassName,
+
+  // Body
+  todayClassName,
+  todayContainerClassName,
+  dayContainerClickable = false,
+  dayContainerClassName,
   bodyClassName,
+
+  // Header
+  customHeader,
+  header = true,
   headerClassName,
+
+  // Calendar
+  className,
+  borderColor = 'neutral',
 }) => {
   const [, setEvents] = useAtom(CalendarAtoms.events)
 
   useEffect(() => {
-    setEvents(events)
+    setEvents(events.map((event) => ({ ...event, id: uuid() })))
   }, [events, setEvents])
 
   return (
     <div className='lg:flex lg:h-full lg:flex-col'>
-      <Header customHeader={customHeader} className={headerClassName} />
+      {header && <Header customHeader={customHeader} className={headerClassName} />}
       <div className={twMerge(containerClassName({ borderColor }), className)}>
-        <CalendarDays borderColor={borderColor} timeGridClassName={timeGridClassName} className={timeLineClassName} />
+        <CalendarDays
+          borderColor={borderColor}
+          timeContainerClassName={timeContainerClassName}
+          className={timeGridClassName}
+        />
         <CalendarBody
-          dayGridClickable={dayGridClickable}
+          eventLimitClassName={eventLimitClassName}
+          dayContainerClickable={dayContainerClickable}
           className={bodyClassName}
           eventClassName={eventClassName}
+          eventContainerClassName={eventContainerClassName}
           borderColor={borderColor}
           todayClassName={todayClassName}
-          todayGridClassName={todayGridClassName}
-          dayGridClassName={dayGridClassName}
+          todayContainerClassName={todayContainerClassName}
+          dayContainerClassName={dayContainerClassName}
           eventLimit={eventLimit}
         />
       </div>

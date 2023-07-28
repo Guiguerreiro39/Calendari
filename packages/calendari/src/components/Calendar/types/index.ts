@@ -9,7 +9,9 @@ export type SingleDayGrid = {
 export type DaysGrid = SingleDayGrid[]
 
 export interface Event {
-  date: Date
+  id?: string
+  startAt: Date
+  endAt: Date
   title: string
 }
 
@@ -45,21 +47,24 @@ export type colors =
 export interface CalendarProps {
   // Events
   eventClassName?: string
+  eventContainerClassName?: string
+  eventLimitClassName?: string
   events?: EventList
   eventLimit?: number
 
   // Timeline
-  timeLineClassName?: string
   timeGridClassName?: string
+  timeContainerClassName?: string
 
   // Body
   todayClassName?: string
-  todayGridClassName?: string
-  dayGridClassName?: string
-  dayGridClickable?: boolean
+  todayContainerClassName?: string
+  dayContainerClassName?: string
+  dayContainerClickable?: boolean
   bodyClassName?: string
 
   // Header
+  header?: boolean
   headerClassName?: string
   customHeader?: ReactNode
 
