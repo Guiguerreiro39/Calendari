@@ -1,15 +1,16 @@
 import React from 'react'
-import { Event as EventType } from '../types'
+import { EventProps } from '../types'
 import Element from '../utils/Element'
 import { twMerge } from 'tailwind-merge'
 
-const Event: React.FC<{
-  event: EventType
-  startColumn: number
-  endColumn: number
-  eventClassName?: string
-  eventContainerClassName?: string
-}> = ({ event, startColumn, endColumn, eventClassName, eventContainerClassName }) => {
+const Event: React.FC<EventProps> = ({
+  event,
+  startColumn,
+  endColumn,
+  eventClassName,
+  eventContainerClassName,
+  eventOnClick,
+}) => {
   return (
     <li
       className={twMerge('px-2 py-0.5 event', eventContainerClassName)}
@@ -19,8 +20,13 @@ const Event: React.FC<{
       }}
     >
       <Element
-        as='button'
-        className={twMerge('rounded-full bg-neutral-200 w-full pointer-events-auto hover:bg-blue-100', eventClassName)}
+        as={typeof eventOnClick === 'function' ? 'button' : 'div'}
+        onClick={() => eventOnClick && eventOnClick(event)}
+        className={twMerge(
+          'rounded-full bg-neutral-200 w-full text-center px-1 pointer-events-auto hover:bg-blue-100',
+          eventClassName,
+          event.className,
+        )}
       >
         {event.title}
       </Element>

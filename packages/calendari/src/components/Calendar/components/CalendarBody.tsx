@@ -1,15 +1,17 @@
 import { useAtom } from 'jotai'
 import React, { ElementRef, useCallback, useEffect, useRef, useState } from 'react'
 import { CalendarAtoms } from '../store'
-import { endOfMonth, format, getDate, getDay, isToday, startOfMonth } from 'date-fns'
+import { endOfMonth, format, getDate, isToday, startOfMonth } from 'date-fns'
 import { getEventEndCol, getEventList, getEventStartingCol, getWeekDaysGrid } from '../utils'
 import { DaysGrid, EventList, SingleDayGrid, CalendarBodyProps } from '../types'
 import { twJoin, twMerge } from 'tailwind-merge'
 import { cva } from 'class-variance-authority'
 import DayContainer from './DayContainer'
 import Event from './Event'
+import defaultValues from '../utils/defaultValues'
+import EventLimit from './EventLimit'
 
-const bodyClassName = cva('flex text-xs text-neutral-700 lg:flex-auto', {
+const cvaBodyClassName = cva('flex text-xs text-neutral-700 lg:flex-auto', {
   variants: {
     borderColor: {
       transparent: 'bg-transparent',
@@ -87,19 +89,7 @@ const MobileCalendarBody: React.FC<{ daysGrid: DaysGrid } & CalendarBodyProps> =
   )
 }
 
-const CalendarBody: React.FC<CalendarBodyProps> = ({
-  eventContainerClassName,
-  eventLimitClassName,
-  eventLimit = 2,
-
-  borderColor = 'neutral',
-  dayContainerClassName,
-  eventClassName,
-  className,
-  dayContainerClickable = false,
-  todayClassName,
-  todayContainerClassName,
-}) => {
+const CalendarBody: React.FC<CalendarBodyProps> = (props) => {
   const [month] = useAtom(CalendarAtoms.month)
   const [year] = useAtom(CalendarAtoms.year)
   const [events] = useAtom(CalendarAtoms.events)
@@ -112,6 +102,8 @@ const CalendarBody: React.FC<CalendarBodyProps> = ({
   const [eventsContainerHeight, setEventsContainerHeight] = useState<number>(0)
 
   const containerRef = useRef<ElementRef<'div'>>(null)
+
+  const bodyProps = defaultValues(props)
 
   const handleCurrentDayContainer = useCallback(
     (day: SingleDayGrid) => {
@@ -127,11 +119,12 @@ const CalendarBody: React.FC<CalendarBodyProps> = ({
       if (containerRef.current?.getElementsByClassName('event').length > 0) {
         console.log(containerRef.current?.getElementsByClassName('event')[0])
         setEventsContainerHeight(
-          containerRef.current?.getElementsByClassName('event')[0]?.getBoundingClientRect().height * (eventLimit + 1),
+          containerRef.current?.getElementsByClassName('event')[0]?.getBoundingClientRect().height *
+            (bodyProps.eventLimit + 1),
         )
       }
     }
-  }, [containerRef, weekEvents, setEventsContainerHeight, eventLimit])
+  }, [containerRef, weekEvents, setEventsContainerHeight, bodyProps.eventLimit])
 
   useEffect(() => {
     setFirstDayOfMonth(startOfMonth(new Date(year, month)))
@@ -152,8 +145,11 @@ const CalendarBody: React.FC<CalendarBodyProps> = ({
   const dayContainerMinHeight = useCallback(() => `calc(2.3rem + ${eventsContainerHeight}px)`, [eventsContainerHeight])
 
   return (
-    <div className={bodyClassName({ borderColor })}>
-      <div ref={containerRef} className={twMerge('hidden w-full lg:grid lg:grid-rows-6 lg:gap-px', className)}>
+    <div className={cvaBodyClassName({ borderColor: bodyProps.borderColor })}>
+      <div
+        ref={containerRef}
+        className={twMerge('hidden w-full lg:grid lg:grid-rows-6 lg:gap-px', bodyProps.bodyClassName)}
+      >
         {weekDaysGrid.map((week, weekIndex) => (
           <div key={weekIndex} className='relative hidden lg:grid lg:grid-cols-7 lg:gap-px'>
             {week.map((day, dayIndex) => (
@@ -161,50 +157,33 @@ const CalendarBody: React.FC<CalendarBodyProps> = ({
                 key={day.date.toString()}
                 day={day}
                 dayIndex={dayIndex}
-                todayContainerClassName={todayContainerClassName}
                 dayContainerMinHeight={dayContainerMinHeight()}
-                todayClassName={todayClassName}
-                dayContainerClassName={dayContainerClassName}
-                dayContainerClickable={dayContainerClickable}
+                {...bodyProps}
               />
             ))}
             <ol className='absolute pointer-events-none w-full lg:grid lg:grid-cols-7 mt-9'>
               {weekEvents[weekIndex] &&
-                weekEvents[weekIndex].slice(0, eventLimit).map((event) => {
+                weekEvents[weekIndex].slice(0, bodyProps.eventLimit).map((event) => {
                   return (
                     <Event
                       key={event.id}
-                      eventClassName={eventClassName}
-                      eventContainerClassName={eventContainerClassName}
                       event={event}
                       startColumn={getEventStartingCol(event.startAt, week[0].date)}
                       endColumn={getEventEndCol(event.endAt, week[6].date)}
+                      {...bodyProps}
                     />
                   )
                 })}
               {week
-                .filter((day) => day.events.length > eventLimit)
+                .filter((day) => day.events.length > bodyProps.eventLimit)
                 .map((day) => (
-                  <li
-                    key={day.date.toString()}
-                    className={twMerge('px-2 py-0.5', eventContainerClassName)}
-                    style={{ gridColumnStart: getDay(day.date) }}
-                  >
-                    <button className={twMerge('font-semibold', eventLimitClassName)}>
-                      +{day.events.length - eventLimit} more
-                    </button>
-                  </li>
+                  <EventLimit key={day.date.toString()} day={day} {...bodyProps} />
                 ))}
             </ol>
           </div>
         ))}
       </div>
-      <MobileCalendarBody
-        borderColor={borderColor}
-        daysGrid={[]}
-        dayContainerClassName={dayContainerClassName}
-        className={className}
-      />
+      <MobileCalendarBody daysGrid={[]} {...bodyProps} />
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { useCalculateMonth, useSetToday } from '../utils/hooks'
 export const useCalendarApi = () => {
   const [month, setMonth] = useAtom(CalendarAtoms.month)
   const [year, setYear] = useAtom(CalendarAtoms.year)
-  const [currentDayGrid, setCurrentDayGrid] = useAtom(CalendarAtoms.currentDayGrid)
+  const [currentDayGrid, setCurrentDayGrid] = useAtom(CalendarAtoms.currentDayContainer)
   const [events, setEvents] = useAtom(CalendarAtoms.events)
 
   const calculateMonth = useCalculateMonth()

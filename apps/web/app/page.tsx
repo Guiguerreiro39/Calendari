@@ -58,7 +58,7 @@ export default function Page() {
       endAt: new Date(),
     },
     {
-      title: "Hockey game",
+      title: "Soccer game",
       startAt: new Date(),
       endAt: new Date(),
     },
@@ -81,12 +81,16 @@ export default function Page() {
         events={events}
         // customHeader={<CustomHeader addEvent={addEvent} />}
         header={false}
-        eventLimit={3}
-        dayContainerClickable
+        eventLimit={2}
+        eventOnClick={(event) => window.alert(`My event is ${event.title}`)}
+        eventLimitOnClick={(events) =>
+          window.alert(`My events are ${events.map((e) => e.title)}`)
+        }
         borderColor="red"
-        todayClassName="bg-red-600"
+        todayClassName="bg-red-600 hover:bg-red-600"
         todayContainerClassName="bg-red-200"
-        dayContainerClassName="bg-red-50 hover:bg-red-100"
+        dayContainerClassName="bg-red-50 items-center py-1"
+        dayClassName="hover:bg-red-100"
         className="shadow-none min-h-screen rounded-none border-0"
         timeContainerClassName="bg-red-50 text-red-600 py-0"
         timeGridClassName="border-0"

@@ -39,13 +39,9 @@ const timeClassName = cva(
   'text-center text-xs font-semibold leading-6 text-neutral-700 flex justify-center bg-white py-2',
 )
 
-const CalendarDays: React.FC<CalendarDaysProps> = ({
-  borderColor = 'neutral',
-  timeContainerClassName = '',
-  className = '',
-}) => {
+const CalendarDays: React.FC<CalendarDaysProps> = ({ borderColor, timeContainerClassName, timeGridClassName }) => {
   return (
-    <div className={twMerge(daysClassName({ borderColor }), className)}>
+    <div className={twMerge(daysClassName({ borderColor }), timeGridClassName)}>
       <div className={twMerge(timeClassName({}), timeContainerClassName)}>
         <span>M</span>
         <span className='sr-only sm:not-sr-only'>on</span>

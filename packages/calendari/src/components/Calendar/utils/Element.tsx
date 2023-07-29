@@ -4,7 +4,7 @@ const Element: React.FC<
   React.HTMLAttributes<HTMLElement> & {
     children: React.ReactNode
     as?: 'div' | 'button'
-    onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+    onClick?: () => void
   }
 > = ({ children, as = 'div', onClick = () => {}, ...props }) => {
   if (as === 'button')
@@ -12,7 +12,7 @@ const Element: React.FC<
       <button
         onClick={(e) => {
           e.preventDefault()
-          onClick(e)
+          onClick()
         }}
         {...props}
       >

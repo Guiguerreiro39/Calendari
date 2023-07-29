@@ -1,20 +1,10 @@
 import React from 'react'
-import { SingleDayGrid } from '../types'
+import { DayContainerProps } from '../types'
 import { formatISO, getDate, isToday } from 'date-fns'
-import { twJoin, twMerge } from 'tailwind-merge'
+import { twMerge } from 'tailwind-merge'
 import Element from '../utils/Element'
 import { useAtom } from 'jotai'
 import { CalendarAtoms } from '../store'
-
-interface DayContainerProps {
-  day: SingleDayGrid
-  dayContainerMinHeight: string
-  dayIndex: number
-  todayContainerClassName?: string
-  todayClassName?: string
-  dayContainerClassName?: string
-  dayContainerClickable: boolean
-}
 
 const DayContainer: React.FC<DayContainerProps> = ({
   day,
@@ -22,7 +12,8 @@ const DayContainer: React.FC<DayContainerProps> = ({
   todayContainerClassName,
   todayClassName,
   dayContainerClassName,
-  dayContainerClickable,
+  dayClassName,
+  dayContainerOnClick,
 }) => {
   const [, setCurrentDayContainer] = useAtom(CalendarAtoms.currentDayContainer)
 
@@ -34,12 +25,12 @@ const DayContainer: React.FC<DayContainerProps> = ({
   return (
     <>
       <Element
-        as={dayContainerClickable ? 'button' : 'div'}
+        as={typeof dayContainerOnClick !== 'undefined' ? 'button' : 'div'}
         onClick={() => setCurrentDayContainer(day)}
         key={formattedDate}
         style={{ minHeight: dayContainerMinHeight }}
         className={twMerge(
-          'text-start flex flex-col justify-start bg-white px-3 py-2 text-neutral-700',
+          'flex flex-col justify-start bg-white px-3 py-2 text-neutral-700',
           notCurrentMonthClassName,
           dayContainerClassName,
           isTodayContainerClassName,
@@ -47,7 +38,7 @@ const DayContainer: React.FC<DayContainerProps> = ({
       >
         <time
           dateTime={formattedDate}
-          className={twJoin('flex h-6 w-6 items-center justify-center rounded-full', isTodayClassName)}
+          className={twMerge('flex h-6 w-6 items-center justify-center rounded-full', dayClassName, isTodayClassName)}
         >
           {getDate(day.date)}
         </time>

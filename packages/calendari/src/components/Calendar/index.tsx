@@ -9,6 +9,7 @@ import { CalendarAtoms } from './store'
 import { cva } from 'class-variance-authority'
 import { twMerge } from 'tailwind-merge'
 import { v4 as uuid } from 'uuid'
+import defaultValues from './utils/defaultValues'
 
 export * from './components/Header'
 export * from './api'
@@ -45,61 +46,21 @@ const containerClassName = cva('lg:flex lg:flex-auto lg:flex-col border shadow-m
   },
 })
 
-export const Calendar: React.FC<CalendarProps> = ({
-  // Events
-  events = [],
-  eventLimit = 2,
-  eventClassName,
-  eventContainerClassName,
-  eventLimitClassName,
-
-  // Timeline
-  timeGridClassName,
-  timeContainerClassName,
-
-  // Body
-  todayClassName,
-  todayContainerClassName,
-  dayContainerClickable = false,
-  dayContainerClassName,
-  bodyClassName,
-
-  // Header
-  customHeader,
-  header = true,
-  headerClassName,
-
-  // Calendar
-  className,
-  borderColor = 'neutral',
-}) => {
+export const Calendar: React.FC<CalendarProps> = (props) => {
   const [, setEvents] = useAtom(CalendarAtoms.events)
 
+  const calendarProps = defaultValues(props)
+
   useEffect(() => {
-    setEvents(events.map((event) => ({ ...event, id: uuid() })))
-  }, [events, setEvents])
+    setEvents(calendarProps.events.map((event) => ({ ...event, id: uuid() })))
+  }, [calendarProps.events, setEvents])
 
   return (
     <div className='lg:flex lg:h-full lg:flex-col'>
-      {header && <Header customHeader={customHeader} className={headerClassName} />}
-      <div className={twMerge(containerClassName({ borderColor }), className)}>
-        <CalendarDays
-          borderColor={borderColor}
-          timeContainerClassName={timeContainerClassName}
-          className={timeGridClassName}
-        />
-        <CalendarBody
-          eventLimitClassName={eventLimitClassName}
-          dayContainerClickable={dayContainerClickable}
-          className={bodyClassName}
-          eventClassName={eventClassName}
-          eventContainerClassName={eventContainerClassName}
-          borderColor={borderColor}
-          todayClassName={todayClassName}
-          todayContainerClassName={todayContainerClassName}
-          dayContainerClassName={dayContainerClassName}
-          eventLimit={eventLimit}
-        />
+      {calendarProps.header && <Header {...calendarProps} />}
+      <div className={twMerge(containerClassName({ borderColor: calendarProps.borderColor }), calendarProps.className)}>
+        <CalendarDays {...calendarProps} />
+        <CalendarBody {...calendarProps} />
       </div>
       <MobileEvents />
     </div>
